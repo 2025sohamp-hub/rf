@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Recruiter Finder Dashboard</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            color: #222;
+        }
+
+        .header {
+            background: #111827;
+            color: white;
+            padding: 25px 40px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #cbd5e1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .card h3 {
+            color: #64748b;
+            font-size: 15px;
+            margin-bottom: 10px;
+        }
+
+        .number {
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .search-box {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+        }
+
+        .search-box h2 {
+            margin-bottom: 15px;
+        }
+
+        .search {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        .table-container {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 14px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        th {
+            background: #f8fafc;
+        }
+
+        .email {
+            color: #2563eb;
+        }
+
+        @media (max-width: 700px) {
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <h1>Recruiter Finder Dashboard</h1>
+        <p>Manage and search recruiter contacts</p>
+    </div>
+
+    <div class="container">
+
+        <div class="stats">
+
+            <div class="card">
+                <h3>Total Recruiters</h3>
+                <div class="number" id="totalRecruiters">0</div>
+            </div>
+
+            <div class="card">
+                <h3>Emails Found</h3>
+                <div class="number" id="emailsFound">0</div>
+            </div>
+
+            <div class="card">
+                <h3>Companies</h3>
+                <div class="number" id="companies">0</div>
+            </div>
+
+        </div>
+
+        <div class="search-box">
+
+            <h2>Search Recruiters</h2>
+
+            <input
+                type="text"
+                id="searchInput"
+                class="search"
+                placeholder="Search by recruiter, company or email..."
+                onkeyup="searchRecruiters()"
+            >
+
+        </div>
+
+        <div class="table-container">
+
+            <h2>Recruiter List</h2>
+
+            <table id="recruiterTable">
+
+                <thead>
+                    <tr>
+                        <th>Recruiter Name</th>
+                        <th>Company</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td>Example Recruiter</td>
+                        <td>Example Company</td>
+                        <td class="email">recruiter@example.com</td>
+                        <td>HR Manager</td>
+                    </tr>
+
+                    <tr>
+                        <td>Demo Recruiter</td>
+                        <td>Demo Company</td>
+                        <td class="email">hr@democompany.com</td>
+                        <td>Talent Acquisition</td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+    <script>
+
+        function updateStats() {
+
+            const rows = document.querySelectorAll("#recruiterTable tbody tr");
+
+            let total = rows.length;
+            let emails = 0;
+            let companyList = [];
+
+            rows.forEach(row => {
+
+                const cells = row.querySelectorAll("td");
+
+                if (cells.length >= 3) {
+
+                    const email = cells[2].innerText.trim();
+                    const company = cells[1].innerText.trim();
+
+                    if (email !== "") {
+                        emails++;
+                    }
+
+                    if (company !== "") {
+                        companyList.push(company);
+                    }
+                }
+
+            });
+
+            document.getElementById("totalRecruiters").innerText = total;
+            document.getElementById("emailsFound").innerText = emails;
+            document.getElementById("companies").innerText =
+                [...new Set(companyList)].length;
+        }
+
+
+        function searchRecruiters() {
+
+            const input =
+                document.getElementById("searchInput").value.toLowerCase();
+
+            const rows =
+                document.querySelectorAll("#recruiterTable tbody tr");
+
+            rows.forEach(row => {
+
+                const text = row.innerText.toLowerCase();
+
+                if (text.includes(input)) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+
+            });
+
+        }
+
+
+        updateStats();
+
+    </script>
+
+</body>
+</html>
