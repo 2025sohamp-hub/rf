@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Recruiter Finder Dashboard</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            color: #222;
+        }
+
+        .header {
+            background: #111827;
+            color: white;
+            padding: 25px 40px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #cbd5e1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .card h3 {
+            color: #64748b;
+            font-size: 15px;
+            margin-bottom: 10px;
+        }
+
+        .number {
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .search-box {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+        }
+
+        .search-box h2 {
+            margin-bottom: 15px;
+        }
+
+        .search {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        .table-container {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 14px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        th {
+            background: #f8fafc;
+        }
+
+        .email {
+            color: #2563eb;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #64748b;
+        }
+
+        .error {
+            color: red;
+            padding: 20px;
+        }
+
+        @media (max-width: 700px) {
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <h1>Recruiter Finder Dashboard</h1>
+        <p>Search and manage recruiter contacts</p>
+    </div>
+
+    <div class="container">
+
+        <div class="stats">
+
+            <div class="card">
+                <h3>Total Recruiters</h3>
+                <div class="number" id="totalRecruiters">0</div>
+            </div>
+
+            <div class="card">
+                <h3>Emails Found</h3>
+                <div class="number" id="emailsFound">0</div>
+            </div>
+
+            <div class="card">
+                <h3>Companies</h3>
+                <div class="number" id="companies">0</div>
+            </div>
+
+        </div>
+
+        <div class="search-box">
+
+            <h2>Search Recruiters</h2>
+
+            <input
+                type="text"
+                id="searchInput"
+                class="search"
+                placeholder="Search recruiter, company, email or role..."
+                onkeyup="searchRecruiters()"
+            >
+
+        </div>
+
+        <div class="table-container">
+
+            <h2>Recruiter List</h2>
+
+            <table id="recruiterTable">
+
+                <thead>
+                    <tr>
+                        <th>Recruiter Name</th>
+                        <th>Company</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                    </tr>
+                </thead>
+
+                <tbody id="recruiterBody">
+
+                    <tr>
+                        <td colspan="4" class="loading">
+                            Loading recruiters...
+                        </td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <script>
+
+        let recruiters = [];
+
+
+        // Load recruiters.csv
+        fetch("recruiters.csv")
+            .then(response => {
+
+                if (!response.ok) {
+                    throw new Error("Could not find recruiters.csv");
+                }
+
+                return response.text();
+
+            })
+            .then(csv => {
+
+                recruiters = parseCSV(csv);
+
+                displayRecruiters(recruiters);
+
+                updateStats(recruiters);
+
+            })
+            .catch(error => {
+
+                document.getElementById("recruiterBody").innerHTML = `
+                    <tr>
+                        <td colspan="4" class="error">
+                            Error loading recruiter data.
+                            Make sure recruiters.csv is in the same repository.
+                        </td>
+                    </tr>
+                `;
+
+                console.error(error);
+
+            });
+
+
+        // Convert CSV into data
+        function parseCSV(csv) {
+
+            const lines = csv.trim().split("\n");
+
+            const headers = lines[0].split(",");
+
+            return lines.slice(1).map(line => {
+
+                const values = line.split(",");
+
+                return {
+                    name: values[0] || "",
+                    company: values[1] || "",
+                    email: values[2] || "",
+                    role: values[3] || ""
+                };
+
+            });
+
+        }
+
+
+        // Display recruiters
+        function displayRecruiters(data) {
+
+            const body = document.getElementById("recruiterBody");
+
+            body.innerHTML = "";
+
+            if (data.length === 0) {
+
+                body.innerHTML = `
+                    <tr>
+                        <td colspan="4">
+                            No recruiters found.
+                        </td>
+                    </tr>
+                `;
+
+                return;
+            }
+
+
+            data.forEach(recruiter => {
+
+                const row = document.createElement("tr");
+
+                row.innerHTML = `
+                    <td>${recruiter.name}</td>
+                    <td>${recruiter.company}</td>
+                    <td class="email">${recruiter.email}</td>
+                    <td>${recruiter.role}</td>
+                `;
+
+                body.appendChild(row);
+
+            });
+
+        }
+
+
+        // Update dashboard numbers
+        function updateStats(data) {
+
+            document.getElementById("totalRecruiters").innerText =
+                data.length;
+
+
+            const emails = data.filter(
+                recruiter => recruiter.email.trim() !== ""
+            ).length;
+
+            document.getElementById("emailsFound").innerText =
+                emails;
+
+
+            const companies = new Set(
+                data.map(recruiter => recruiter.company)
+            );
+
+            document.getElementById("companies").innerText =
+                companies.size;
+
+        }
+
+
+        // Search recruiters
+        function searchRecruiters() {
+
+            const search =
+                document.getElementById("searchInput")
+                .value
+                .toLowerCase();
+
+
+            const filtered = recruiters.filter(recruiter =>
+
+                recruiter.name.toLowerCase().includes(search) ||
+
+                recruiter.company.toLowerCase().includes(search) ||
+
+                recruiter.email.toLowerCase().includes(search) ||
+
+                recruiter.role.toLowerCase().includes(search)
+
+            );
+
+
+            displayRecruiters(filtered);
+
+        }
+
+    </script>
+
+</body>
+</html>
